@@ -1,0 +1,15 @@
+.idea
+.vscode
+.DS_Store
+
+*.log
+*.html
+*.bak
+
+.git
+
+vendor/*
+
+# Uncomment below two lines to commit autoload-generated files.
+# !vendor/composer
+# !vendor/autoload.php

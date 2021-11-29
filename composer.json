@@ -1,0 +1,51 @@
+{
+  "name": "naran/social-login",
+  "description": "Naran social login, just another social login plugin for WordPress.",
+  "type": "wordpress-plugin",
+  "minimum-stability": "stable",
+  "authors": [
+    {
+      "name": "changwoo",
+      "email": "ep6tri@hotmail.com",
+      "role": "author",
+      "homepage": "https://blog.changwoo.pe.kr"
+    }
+  ],
+  "scripts": {
+    "daa": "@composer dump-autoload --classmap-authoritative --no-dev",
+    "make-pot": "@php -d xdebug.max_nesting_level=512 $(which wp) i18n make-pot . ./languages/nsl.pot --domain=nsl --include=assets/js/dist --exclude=src",
+    "make-json": "@php $(which wp) i18n make-json ./languages --no-purge",
+    "version": "@php bin/sync-version.php index.php",
+    "test": "vendor/bin/phpunit",
+    "post-create-project-cmd": [
+      "@php bin/prefix-change.php",
+      "@composer daa"
+    ]
+  },
+  "scripts-descriptions": {
+    "daa": "Run `composer dump-autoload --classmap-authoritative --no-dev`.",
+    "make-pot": "Create .pot file.",
+    "make-json": "Create .json translation files.",
+    "version": "Sync your plugin version string.",
+    "test": "Run phpunit."
+  },
+  "autoload": {
+    "files": [
+      "core/core-functions.php",
+      "includes/functions.php"
+    ],
+    "classmap": [
+      "core",
+      "includes"
+    ]
+  },
+  "require": {
+    "php": "^7.4",
+    "ext-json": "*"
+  },
+  "version": "0.1.0",
+  "require-dev": {
+    "phpunit/phpunit": "^7"
+  },
+  "license": "GPL-2.0-or-later"
+}
