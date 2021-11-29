@@ -13,6 +13,7 @@ if ( ! class_exists( 'NSL_Main' ) ) {
 	 *
 	 * @property-read NSL_Admins    $admins
 	 * @property-read NSL_Registers $registers
+	 * @property-read NSL_Testbed   $testbed
 	 */
 	final class NSL_Main extends NSL_Main_Base {
 		/**
@@ -26,6 +27,7 @@ if ( ! class_exists( 'NSL_Main' ) ) {
 			return [
 				'admins'    => NSL_Admins::class,
 				'registers' => NSL_Registers::class,
+				'testbed'   => NSL_Testbed::class,
 			];
 		}
 
