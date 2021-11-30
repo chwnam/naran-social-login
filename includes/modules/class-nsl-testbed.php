@@ -14,7 +14,11 @@ if ( ! class_exists( 'NSL_Testbed' ) ) {
 		use NSL_Template_Impl;
 
 		public function __construct() {
-			$this->add_filter( 'the_content', 'testbed_content_google' );
+			$this
+//				->add_filter( 'the_content', 'testbed_content_google' )
+//				->add_filter( 'the_content', 'testbed_content_facebook' )
+				->add_filter( 'the_content', 'testbed_content_naver' )
+			;
 		}
 
 		public function testbed_content_google( string $content ): string {
@@ -149,6 +153,86 @@ if ( ! class_exists( 'NSL_Testbed' ) ) {
 					$url = esc_url( substr( $uri, 0, strpos( $uri, '?' ) ) );
 
 					$content = '<p><pre>' . wp_json_encode( $body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) . '</pre></p>' .
+					           '<p><a href="' . $url . '">Go back</a></p>';
+				}
+			}
+
+			return $content;
+		}
+
+		public function testbed_content_naver( string $content ): string {
+			if ( is_page( 'nsl-testbed' ) ) {
+				$client_id     = NSL_NAVER_CLIENT_ID;
+				$client_secret = NSL_NAVER_CLIENT_SECRET;
+				$redirect_uri  = 'https://naran.dev.site/nsl-testbed/';
+
+				if ( ! isset( $_GET['code'] ) ) {
+					$url = add_query_arg(
+						urlencode_deep(
+							[
+								'response_type' => 'code',
+								'client_id'     => $client_id,
+								'redirect_uri'  => $redirect_uri,
+								'state'         => 'nsl',
+							]
+						),
+						'https://nid.naver.com/oauth2.0/authorize'
+					);
+
+					$content = '<p><a href="' . esc_url( $url ) . '">Naver OAuth 2.0</a></p>';
+				} else {
+					$r = wp_remote_post(
+						'https://nid.naver.com/oauth2.0/token',
+						[
+							'body' => [
+								'grant_type'    => 'authorization_code',
+								'client_id'     => $client_id,
+								'client_secret' => $client_secret,
+								'code'          => $_GET['code'],
+								'state'         => 'nsl',
+							]
+						]
+					);
+
+					$body = wp_remote_retrieve_body( $r );
+					if ( is_string( $body ) ) {
+						$body = json_decode( $body );
+					}
+
+					$access_token = $body->access_token;
+
+					$r = wp_remote_get(
+						'https://openapi.naver.com/v1/nid/me',
+						[
+							'headers' => [
+								'Authorization' => 'Bearer ' . $access_token
+							]
+						]
+					);
+
+					$body = wp_remote_retrieve_body( $r );
+					if ( is_string( $body ) ) {
+						$body = json_decode( $body );
+					}
+
+					$uri = $_SERVER['REQUEST_URI'];
+					$url = esc_url( substr( $uri, 0, strpos( $uri, '?' ) ) );
+
+					$delete_url = add_query_arg(
+						urlencode_deep(
+							[
+								'grant_type'       => 'delete',
+								'client_id'        => $client_id,
+								'client_secret'    => $client_secret,
+								'access_token'     => $access_token,
+								'service_provider' => 'NAVER',
+							]
+						),
+						'https://nid.naver.com/oauth2.0/token',
+					);
+
+					$content = '<p><pre>' . wp_json_encode( $body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) . '</pre></p>' .
+					           '<p><a href="' . esc_url( $delete_url ) . '">Delete Token</a></p>' .
 					           '<p><a href="' . $url . '">Go back</a></p>';
 				}
 			}
