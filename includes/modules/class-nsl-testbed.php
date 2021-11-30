@@ -17,7 +17,8 @@ if ( ! class_exists( 'NSL_Testbed' ) ) {
 			$this
 //				->add_filter( 'the_content', 'testbed_content_google' )
 //				->add_filter( 'the_content', 'testbed_content_facebook' )
-				->add_filter( 'the_content', 'testbed_content_naver' )
+//				->add_filter( 'the_content', 'testbed_content_naver' )
+				->add_filter( 'the_content', 'testbed_content_kakao' )
 			;
 		}
 
@@ -233,6 +234,72 @@ if ( ! class_exists( 'NSL_Testbed' ) ) {
 
 					$content = '<p><pre>' . wp_json_encode( $body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) . '</pre></p>' .
 					           '<p><a href="' . esc_url( $delete_url ) . '">Delete Token</a></p>' .
+					           '<p><a href="' . $url . '">Go back</a></p>';
+				}
+			}
+
+			return $content;
+		}
+
+		public function testbed_content_kakao( string $content ): string {
+			if ( is_page( 'nsl-testbed' ) ) {
+				$client_id     = NSL_KAKAO_CLIENT_ID;
+				$client_secret = NSL_KAKAO_CLIENT_SECRET;
+				$redirect_uri  = 'https://naran.dev.site/nsl-testbed/';
+
+				if ( ! isset( $_GET['code'] ) ) {
+					$url = add_query_arg(
+						urlencode_deep(
+							[
+								'client_id'     => $client_id,
+								'redirect_uri'  => $redirect_uri,
+								'response_type' => 'code',
+								'state'         => 'nsl',
+							]
+						),
+						'https://kauth.kakao.com/oauth/authorize'
+					);
+
+					$content = '<p><a href="' . esc_url( $url ) . '">Kakao OAuth 2.0</a></p>';
+				} else {
+					$r = wp_remote_post(
+						'https://kauth.kakao.com/oauth/token',
+						[
+							'body' => [
+								'grant_type'    => 'authorization_code',
+								'client_id'     => $client_id,
+								'redirect_uri'  => $redirect_uri,
+								'code'          => $_GET['code'],
+								'client_secret' => $client_secret,
+							]
+						]
+					);
+
+					$body = wp_remote_retrieve_body( $r );
+					if ( is_string( $body ) ) {
+						$body = json_decode( $body );
+					}
+
+					$access_token = $body->access_token;
+
+					$r = wp_remote_get(
+						'https://kapi.kakao.com//v2/user/me',
+						[
+							'headers' => [
+								'Authorization' => 'Bearer ' . $access_token
+							]
+						]
+					);
+
+					$body = wp_remote_retrieve_body( $r );
+					if ( is_string( $body ) ) {
+						$body = json_decode( $body );
+					}
+
+					$uri = $_SERVER['REQUEST_URI'];
+					$url = esc_url( substr( $uri, 0, strpos( $uri, '?' ) ) );
+
+					$content = '<p><pre>' . wp_json_encode( $body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) . '</pre></p>' .
 					           '<p><a href="' . $url . '">Go back</a></p>';
 				}
 			}
