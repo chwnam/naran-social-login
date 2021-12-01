@@ -19,7 +19,8 @@ if ( ! class_exists( 'NSL_Testbed' ) ) {
 //				->add_filter( 'the_content', 'testbed_content_facebook' )
 //				->add_filter( 'the_content', 'testbed_content_naver' )
 //				->add_filter( 'the_content', 'testbed_content_kakao' )
-				->add_filter( 'the_content', 'testbed_content_payco' )
+//				->add_filter( 'the_content', 'testbed_content_payco' )
+				->add_filter( 'the_content', 'testbed_content_twitter' )
 			;
 		}
 
@@ -373,6 +374,71 @@ if ( ! class_exists( 'NSL_Testbed' ) ) {
 					$content = '<p><pre>' . wp_json_encode( $body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) . '</pre></p>' .
 					           '<p><a href="' . $url . '">Go back</a></p>';
 				}
+			}
+
+			return $content;
+		}
+
+		public function testbed_content_twitter( string $content ): string {
+			if ( is_page( 'nsl-testbed' ) ) {
+				$client_id     = NSL_TWITTER_CLIENT_ID;
+				$client_secret = NSL_TWITTER_CLIENT_SECRET;
+				$redirect_uri  = 'https://naran.dev.site/nsl-testbed/';
+
+				$endpoint = 'https://api.twitter.com/oauth/request_token';
+				$nonce    = wp_generate_password( 32, false );
+				$time     = time();
+
+				$params = [
+					'oauth_callback'         => $redirect_uri,
+					'oauth_consumer_key'     => $client_id,
+					'oauth_nonce'            => $nonce,
+					'oauth_timestamp'        => $time,
+					'oauth_signature_method' => 'HMAC-SHA1',
+					'oauth_version'          => '1.0',
+				];
+
+				ksort( $params );
+				$string = build_query( rawurlencode_deep( $params ) );
+
+				$base_sring = 'POST&' . rawurlencode( $endpoint ) . '&' . rawurlencode( $string );
+				$sign_key   = urlencode( $client_secret ) . '&';
+
+				$signature = hash_hmac( 'sha1', $base_sring, $sign_key, true );
+
+				$signature_base64 = base64_encode( $signature );
+
+				$params['oauth_signature'] = $signature_base64;
+				unset( $params['oauth_callback'] );
+
+				$header_string = 'OAuth ';
+				foreach ( $params as $key => $val ) {
+					$header_string .= rawurlencode( $key ) . '="' . rawurlencode( $val ) . '", ';
+				}
+				$header_string = substr( $header_string, 0, - 2 );
+
+				$url = add_query_arg(
+					'oauth_callback',
+					rawurlencode( $redirect_uri ),
+					$endpoint
+				);
+
+				$r = wp_remote_post(
+					$url,
+					[
+						'headers' => [
+							'Authorization' => $header_string,
+							'Content-Type'  => 'application/x-www-form-urlencoded',
+						]
+					]
+				);
+
+				$body = wp_remote_retrieve_body( $r );
+				if ( is_string( $body ) ) {
+					parse_str( $body, $body );
+				}
+
+				$content = '<p><pre>' . wp_json_encode( $body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) . '</pre></p>';
 			}
 
 			return $content;
