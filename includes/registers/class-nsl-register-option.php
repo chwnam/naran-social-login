@@ -10,18 +10,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'NSL_Register_Option' ) ) {
 	/**
-	 * NOTE: Add 'property-read' phpdoc to make your editor inspect option items properly.
+	 * @property-read NSL_Reg_Option $settings
 	 */
 	class NSL_Register_Option extends NSL_Register_Base_Option {
 		/**
-		 * Define items here.
-		 *
-		 * To use alias, do not forget to return generator as 'key => value' form!
-		 *
 		 * @return Generator
 		 */
 		public function get_items(): Generator {
-			yield; // yield 'alias' => new NSL_Reg_Option();
+			yield 'settings' => new NSL_Reg_Option(
+				'nsl_settings',
+				'nsl_settings',
+				[
+					'type'              => 'array',
+					'description'       => 'Naran social login settings value.',
+					'sanitize_callback' => [ NSL_Settings::class, 'sanitize' ],
+					'show_in_rest'      => false,
+					'default'           => NSL_Settings::get_defaults(),
+					'autoload'          => false,
+				]
+			);
 		}
 	}
 }

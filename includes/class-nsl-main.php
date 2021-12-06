@@ -13,6 +13,7 @@ if ( ! class_exists( 'NSL_Main' ) ) {
 	 *
 	 * @property-read NSL_Admins    $admins
 	 * @property-read NSL_Registers $registers
+	 * @property-read NSL_Settings  $settings
 	 * @property-read NSL_Testbed   $testbed
 	 */
 	final class NSL_Main extends NSL_Main_Base {
@@ -28,14 +29,15 @@ if ( ! class_exists( 'NSL_Main' ) ) {
 				'admins'    => NSL_Admins::class,
 				'auth'      => function () { return new NSL_Auth(); },
 				'registers' => NSL_Registers::class,
+				'settings'  => function () { return new NSL_Settings(); },
 				'testbed'   => NSL_Testbed::class,
 			];
 		}
 
 		protected function extra_initialize(): void {
 			// Do some plugin-specific initialization tasks.
-			// $plugin = plugin_basename( $this->get_main_file() );
-			// $this->add_filter( "plugin_action_links_$plugin", 'add_plugin_action_links' );
+			$plugin = plugin_basename( $this->get_main_file() );
+			$this->add_filter( "plugin_action_links_$plugin", 'add_plugin_action_links' );
 		}
 
 		public function add_plugin_action_links( array $actions ): array {
@@ -44,7 +46,7 @@ if ( ! class_exists( 'NSL_Main' ) ) {
 					'settings' => sprintf(
 					/* translators: %1$s: link to settings , %2$s: aria-label  , %3$s: text */
 						'<a href="%1$s" id="nss-settings" aria-label="%2$s">%3$s</a>',
-						admin_url( 'options-general.php?page=nsl' ), // NOTE: You need to implement the page.
+						admin_url( 'options-general.php?page=nsl' ),
 						esc_attr__( 'NSL settings', 'nsl' ),
 						esc_html__( 'Settings', 'nsl' )
 					)

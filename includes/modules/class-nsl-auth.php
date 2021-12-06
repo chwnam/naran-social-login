@@ -25,7 +25,13 @@ if ( ! class_exists( 'NSL_Auth' ) ) {
 		}
 
 		protected function get_auth_backend( string $service_id ) {
-			return new NSL_Auth_Google();
+			switch ( $service_id ) {
+				case 'google':
+					return new NSL_Auth_Google();
+
+				case 'twitter':
+					return new NSL_Auth_Twitter();
+			}
 		}
 	}
 }

@@ -22,6 +22,7 @@ if ( ! class_exists( 'NSL_Registers' ) ) {
 	 * @property-read NSL_Register_Cron_Schedule $cron_schedule
 	 * @property-read NSL_Register_Custom_Table  $custom_table
 	 * @property-read NSL_Register_Deactivation  $deactivation
+	 * @property-read NSL_Register_Menu          $menu
 	 * @property-read NSL_Register_Option        $option
 	 * @property-read NSL_Register_Post_Meta     $post_meta
 	 * @property-read NSL_Register_Post_Type     $post_type
@@ -56,6 +57,7 @@ if ( ! class_exists( 'NSL_Registers' ) ) {
 					'cron_schedule' => NSL_Register_Cron_Schedule::class,
 					'custom_table'  => function () { return new NSL_Register_Custom_Table(); },
 					'deactivation'  => NSL_Register_Deactivation::class,
+					'menu'          => NSL_Register_Menu::class,
 					'option'        => NSL_Register_Option::class,
 					'post_meta'     => NSL_Register_Post_Meta::class,
 					'post_type'     => NSL_Register_Post_Type::class,
