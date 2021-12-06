@@ -16,6 +16,13 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 		const PAGE_SLUG = 'nsl';
 
 		public function __construct() {
+			$this->add_action( 'admin_enqueue_scripts', 'admin_enqueue_scripts' );
+		}
+
+		public function admin_enqueue_scripts( string $hook ) {
+			if ( 'settings_page_nsl' === $hook ) {
+				// enqueue header styles here.
+			}
 		}
 
 		public function render_page() {
@@ -45,15 +52,15 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 			add_settings_field(
 				'nsl-services-active',
 				__( 'Enable/Disable', 'nsl' ),
-				'__return_empty_string',
+				[ $this, 'render_field_enable_disable' ],
 				self::PAGE_SLUG,
 				$section_services
 			);
 
 			add_settings_field(
-				'nsl-services-enabled',
+				'nsl-services-available',
 				__( 'Available Services', 'nsl' ),
-				'__return_empty_string',
+				[ $this, 'render_field_available_services' ],
 				self::PAGE_SLUG,
 				$section_services
 			);
@@ -61,7 +68,7 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 			add_settings_field(
 				'nsl-services-icon-sets',
 				__( 'Icon Sets', 'nsl' ),
-				'__return_empty_string',
+				[ $this, 'render_field_icon_sets' ],
 				self::PAGE_SLUG,
 				$section_services
 			);
@@ -96,6 +103,38 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 			);
 
 			return $this;
+		}
+
+		/**
+		 * Render 'Enable/Disable' field.
+		 */
+		public function render_field_enable_disable() {
+			NSL_HTML::input(
+				[
+					'id'      => '',
+					'name'    => '',
+					'value'   => 'yes',
+					'type'    => 'checkbox',
+					'checked' => false,
+				]
+			);
+			NSL_HTML::tag_open( 'label', [ 'for' => '' ] );
+			esc_html_e( 'Use naran social login.', 'nsl' );
+			NSL_HTML::tag_close( 'label' );
+		}
+
+		/**
+		 * Render 'Available Services' field.
+		 *
+		 */
+		public function render_field_available_services() {
+		}
+
+		/**
+		 * Render 'Icon Sets' field.
+		 *
+		 */
+		public function render_field_icon_sets() {
 		}
 	}
 }

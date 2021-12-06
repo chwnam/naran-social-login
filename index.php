@@ -13,7 +13,7 @@
  * Update URI:
  * Text Domain:       nsl
  * Domain Path:       /languages
- * CPBN version:      1.2.2
+ * CPBN version:      1.2.3
  */
 
 /* ABSPATH check */

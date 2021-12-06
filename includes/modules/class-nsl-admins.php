@@ -20,7 +20,7 @@ if ( ! class_exists( 'NSL_Admins' ) ) {
 		public function __construct() {
 			$this->assign_modules(
 				[
-					'settings_page' => function () { return new NSL_Admin_Settings_Page(); }
+					'settings_page' => NSL_Admin_Settings_Page::class,
 				]
 			);
 		}
