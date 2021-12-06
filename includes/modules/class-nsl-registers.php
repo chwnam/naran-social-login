@@ -25,6 +25,7 @@ if ( ! class_exists( 'NSL_Registers' ) ) {
 	 * @property-read NSL_Register_Option        $option
 	 * @property-read NSL_Register_Post_Meta     $post_meta
 	 * @property-read NSL_Register_Post_Type     $post_type
+	 * @property-read NSL_Register_Rewrite_Rule  $rewrite_rule
 	 * @property-read NSL_Register_Role          $role
 	 * @property-read NSL_Register_Script        $script
 	 * @property-read NSL_Register_Shortcode     $shortcode
@@ -58,6 +59,7 @@ if ( ! class_exists( 'NSL_Registers' ) ) {
 					'option'        => NSL_Register_Option::class,
 					'post_meta'     => NSL_Register_Post_Meta::class,
 					'post_type'     => NSL_Register_Post_Type::class,
+					'rewrite_rule'  => NSL_Register_Rewrite_Rule::class,
 					'role'          => function () { return new NSL_Register_Role(); },
 					'script'        => NSL_Register_Script::class,
 					'shortcode'     => NSL_Register_Shortcode::class,

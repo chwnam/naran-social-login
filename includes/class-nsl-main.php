@@ -26,6 +26,7 @@ if ( ! class_exists( 'NSL_Main' ) ) {
 		protected function get_modules(): array {
 			return [
 				'admins'    => NSL_Admins::class,
+				'auth'      => function () { return new NSL_Auth(); },
 				'registers' => NSL_Registers::class,
 				'testbed'   => NSL_Testbed::class,
 			];
