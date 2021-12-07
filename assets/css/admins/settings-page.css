@@ -1,0 +1,41 @@
+#nsl-field-credentials {
+    max-width: 783px;
+}
+
+#nsl-field-credentials label {
+    display: block;
+    font-weight: bold;
+}
+
+#nsl-field-credentials fieldset > div {
+    margin-top: 6px;
+    margin-bottom: 12px;
+}
+
+#nsl-field-credentials fieldset p.description {
+    margin-top: 8px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-style: italic;
+}
+
+#nsl-field-credentials .redirect-uri-wrap {
+    display: flex;
+    width: 99%;
+}
+
+#nsl-field-credentials .copy-uri {
+    padding-top: 5px;
+    padding-left: 10px;
+}
+
+#nsl-field-credentials .copy-uri > a {
+    text-decoration: none;
+    font-size: 13px;
+}
+
+@media screen and (max-width: 782px) {
+    #nsl-field-credentials {
+        max-width: 99%;
+    }
+}

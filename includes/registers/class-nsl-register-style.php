@@ -11,24 +11,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'NSL_Register_Style' ) ) {
 	class NSL_Register_Style extends NSL_Register_Base_Style {
 		public function get_items(): Generator {
-			yield new NSL_Reg_Style(
-				'nsl-jquery-ui',
-				$this->src_helper( 'jquery-ui.min.css' ),
-				[],
-				'1.13.0',
-			);
-			yield new NSL_Reg_Style(
-				'nsl-jquery-ui-structure',
-				$this->src_helper( 'jquery-ui.structure.min.css' ),
-				[],
-				'1.13.0',
-			);
-			yield new NSL_Reg_Style(
-				'nsl-jquery-ui-theme',
-				$this->src_helper( 'jquery-ui.theme.min.css' ),
-				[ 'nsl-jquery-ui', 'nsl-jquery-ui-structure' ],
-				'1.13.0',
-			);
+			if ( is_admin() ) {
+				yield new NSL_Reg_Style(
+					'nsl-jquery-ui',
+					$this->src_helper( 'admins/jquery-ui.min.css' ),
+					[],
+					'1.13.0',
+				);
+				yield new NSL_Reg_Style(
+					'nsl-settings-page',
+					$this->src_helper( 'admins/settings-page.css' ),
+					[ 'nsl-jquery-ui' ]
+				);
+			} else {
+				yield;
+			}
 		}
 	}
 }

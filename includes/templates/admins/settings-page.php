@@ -16,11 +16,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div class="wrap">
-	<h1><?php _e( 'Naran Social Login Settings', 'nsl' ); ?></h1>
+    <h1><?php _e( 'Naran Social Login Settings', 'nsl' ); ?></h1>
 
 	<?php do_action( 'nsl_before_option_form' ); ?>
 
-	<form method="post" action="<?php echo admin_url( 'options.php' ); ?>" novalidate>
+    <form class="nsl-field"
+          action="<?php echo admin_url( 'options.php' ); ?>"
+          method="post"
+          novalidate>
+
 		<?php
 		settings_fields( $option_group );
 		do_action( 'nsl_after_settings_fields' );
@@ -32,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		?>
 
 		<?php submit_button(); ?>
-	</form>
+    </form>
 
 	<?php do_action( 'nsl_after_option_form' ); ?>
 </div>

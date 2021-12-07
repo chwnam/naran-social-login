@@ -21,16 +21,16 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 
 		public function admin_enqueue_scripts( string $hook ) {
 			if ( 'settings_page_nsl' === $hook ) {
-				// enqueue header styles here.
-				$this->enqueue_style( 'nsl-jquery-ui-theme' );
+				$this->enqueue_style( 'nsl-settings-page' );
 			}
 		}
 
 		public function render_page() {
 			$this
 				->prepare_setings()
+				->enqueue_script( 'nsl-settings-page' )
 				->render(
-					'admins/settings',
+					'admins/settings-page',
 					[
 						'option_group' => 'nsl_settings',
 						'page'         => self::PAGE_SLUG,
@@ -89,8 +89,7 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 				$section_registration,
 				__( 'Registration', 'nsl' ),
 				'__return_empty_string',
-				self::PAGE_SLUG,
-				$section_registration
+				self::PAGE_SLUG
 			);
 
 			return $this;
@@ -102,14 +101,14 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 		public function render_field_enable_disable() {
 			NSL_HTML::input(
 				[
-					'id'      => '',
-					'name'    => '',
+					'id'      => 'nsl-field-enabled',
+					'name'    => nsl_option()->settings->get_option_name() . '[enabled]',
 					'value'   => 'yes',
 					'type'    => 'checkbox',
-					'checked' => false,
+					'checked' => nsl()->settings->is_enabled(),
 				]
 			);
-			NSL_HTML::tag_open( 'label', [ 'for' => '' ] );
+			NSL_HTML::tag_open( 'label', [ 'for' => 'nsl-field-enabled' ] );
 			esc_html_e( 'Use naran social login.', 'nsl' );
 			NSL_HTML::tag_close( 'label' );
 		}
@@ -132,13 +131,33 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 		 * Render 'Credentials' field.
 		 */
 		public function render_field_credentials() {
-			$this
-				->enqueue_script( 'nsl-settings-field-credentials' )
-				->render(
-					'admins/settings-field-credentials',
-					[]
-				)
-			;
+			$services      = nsl_get_available_services();
+			$urls          = nsl_get_devlopers_page_urls();
+			$titles        = nsl_get_developers_page_titles();
+			$redirect_uris = nsl_get_redirect_uris();
+			$items         = [];
+
+			asort( $services );
+
+			foreach ( $services as $id => $service ) {
+				if ( isset( $urls[ $id ], $titles[ $id ], $redirect_uris[ $id ] ) ) {
+					$items[ $id ] = [
+						'name'         => $service,
+						'url'          => $urls[ $id ],
+						'dev_title'    => $titles[ $id ],
+						'redirect_uri' => $redirect_uris[ $id ],
+					];
+				}
+			}
+
+			$this->render(
+				'admins/settings-field-credentials',
+				[
+					'option_name'  => nsl_option()->settings->get_option_name(),
+					'option_value' => nsl()->settings->get_credentials(),
+					'items'        => $items,
+				]
+			);
 		}
 	}
 }
