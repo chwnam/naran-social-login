@@ -22,6 +22,7 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 		public function admin_enqueue_scripts( string $hook ) {
 			if ( 'settings_page_nsl' === $hook ) {
 				// enqueue header styles here.
+				$this->enqueue_style( 'nsl-jquery-ui-theme' );
 			}
 		}
 
@@ -73,22 +74,12 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 				$section_services
 			);
 
-			// Credentials /////////////////////////////////////////////////////////////////////////////////////////////
-			$section_credential = 'nsl-credential';
-
-			add_settings_section(
-				$section_credential,
-				__( 'Credentials', 'nsl' ),
-				'__return_empty_string',
-				self::PAGE_SLUG
-			);
-
 			add_settings_field(
-				'nsl-credential-',
-				__( '', 'nsl' ),
-				'__return_empty_string',
+				'nsl-services-credentials',
+				__( 'Credentials', 'nsl' ),
+				[ $this, 'render_field_credentials' ],
 				self::PAGE_SLUG,
-				$section_credential
+				$section_services
 			);
 
 			// Registration ////////////////////////////////////////////////////////////////////////////////////////////
@@ -135,6 +126,19 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 		 *
 		 */
 		public function render_field_icon_sets() {
+		}
+
+		/**
+		 * Render 'Credentials' field.
+		 */
+		public function render_field_credentials() {
+			$this
+				->enqueue_script( 'nsl-settings-field-credentials' )
+				->render(
+					'admins/settings-field-credentials',
+					[]
+				)
+			;
 		}
 	}
 }
