@@ -9,81 +9,121 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'NSL_Auth_Google' ) ) {
-	class NSL_Auth_Google implements NSL_Module {
+	class NSL_Auth_Google implements NSL_Auth_Module {
+		protected string $api_key;
+
+		protected string $api_secret;
+
+		protected string $redirect_uri;
+
+		protected string $scope = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+
+		protected string $access_token;
+
+		public function __construct() {
+			$credential = nsl_settings()->get_credential( static::get_identifier() );
+
+			$this->api_key      = $credential['key'] ?? '';
+			$this->api_secret   = $credential['secret'] ?? '';
+			$this->redirect_uri = nsl_get_redirect_uri( static::get_identifier() );
+			$this->access_token = '';
+		}
+
+		/**
+		 * @throws Exception
+		 */
 		public function authorize() {
-			if ( isset( $_GET['auth'] ) && '1' === $_GET['auth'] ) {
-				$url = $this->get_auth_url();
-				wp_redirect( $url );
+			if ( ! isset( $_GET['code'] ) ) {
+				wp_redirect( $this->flow_1_authorize() );
 				exit;
-			} elseif ( isset( $_GET['code'] ) ) {
-				$r = wp_remote_post(
-					'https://oauth2.googleapis.com/token',
-					[
-						'body' => [
-							'client_id'     => $this->get_client_id(),
-							'client_secret' => $this->get_client_secret(),
-							'code'          => $_GET['code'],
-							'grant_type'    => 'authorization_code',
-							'redirect_uri'  => static::get_redirect_uri(),
-						]
-					]
-				);
-
-				$body = wp_remote_retrieve_body( $r );
-				if ( is_string( $body ) ) {
-					$body = json_decode( $body );
-				}
-
-				$access_token = $body->access_token;
-
-				$r = wp_remote_get(
-					'https://www.googleapis.com/oauth2/v2/userinfo',
-					[
-						'headers' => [
-							'Authorization' => 'Bearer ' . $access_token
-						]
-					]
-				);
-
-				$body = wp_remote_retrieve_body( $r );
-				if ( is_string( $body ) ) {
-					$body = json_decode( $body );
-				}
-
-				$uri = $_SERVER['REQUEST_URI'];
-				$url = esc_url( substr( $uri, 0, strpos( $uri, '?' ) ) );
-
-				echo '<p><pre>' . wp_json_encode( $body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) . '</pre></p>' .
-				     '<p><a href="' . $url . '">Go back</a></p>';
+			} else {
+				return $this->flow_2_get_token()->get_profile();
 			}
 		}
 
-		public function get_auth_url(): string {
+		/**
+		 * @throws Exception
+		 */
+		public function revoke_token() {
+			$this->request(
+				'https://oauth2.googleapis.com/revoke',
+				'POST',
+				[ 'token' => $this->access_token ]
+			);
+		}
+
+		protected function flow_1_authorize(): string {
 			return add_query_arg(
-				urlencode_deep(
+				rawurlencode_deep(
 					[
-						'client_id'     => $this->get_client_id(),
-						'redirect_uri'  => self::get_redirect_uri(),
+						'client_id'     => $this->api_key,
+						'redirect_uri'  => $this->redirect_uri,
 						'response_type' => 'code',
-						'scope'         => 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+						'scope'         => $this->scope,
 						'access_type'   => 'online',
-						'state'         => 'nsl=test&time=' . time(),
+						'state'         => 'nsl=test&time=' . time(), // TODO: state
 					]
 				),
 				'https://accounts.google.com/o/oauth2/v2/auth'
 			);
 		}
 
-		public function get_client_id(): string {
-			return NSL_GOOGLE_CLIENT_ID;
+		/**
+		 * @throws Exception
+		 */
+		protected function flow_2_get_token(): self {
+			$response = $this->request(
+				'https://oauth2.googleapis.com/token',
+				'POST',
+				[
+					'client_id'     => $this->api_key,
+					'client_secret' => $this->api_secret,
+					'code'          => $_GET['code'],
+					'grant_type'    => 'authorization_code',
+					'redirect_uri'  => $this->redirect_uri,
+				]
+			);
+
+			if ( ! $this->verify( $response, 'access_token' ) ) {
+				throw new Exception( 'Invalid token request.' );
+			}
+
+			$this->access_token = $response['access_token'];
+
+			return $this;
 		}
 
-		public function get_client_secret(): string {
-			return NSL_GOOGLE_CLIENT_SECRET;
+		/**
+		 * @throws Exception
+		 */
+		protected function get_profile(): array {
+			$response = $this->request(
+				'https://www.googleapis.com/oauth2/v2/userinfo',
+				'GET',
+				[],
+				[ 'headers' => [ 'Authorization' => 'Bearer ' . $this->access_token ] ]
+			);
+
+			if ( ! $this->verify( $response, 'id&email' ) ) {
+				throw new Exception( 'Invalid /oauth2/v2/userinfo response.' );
+			}
+
+			return $response;
 		}
 
-		public static function get_redirect_uri(): string {
-			return home_url( '/nsl/google/' );
+		/**
+		 * @throws Exception
+		 */
+		protected function request( string $url, string $method = 'GET', array $data = [], array $args = [] ): array {
+			return nsl_remote_request( $url, $method, $data, $args );
+		}
+
+		protected function verify( array $response, string $condition ): bool {
+			return nsl_verify_response( $response, $condition );
+		}
+
+		public static function get_identifier(): string {
+			return 'google';
 		}
 	}
 }

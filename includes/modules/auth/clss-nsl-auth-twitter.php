@@ -9,23 +9,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'NSL_Auth_Twitter' ) ) {
-	class NSL_Auth_Twitter implements NSL_Module {
+	class NSL_Auth_Twitter implements NSL_Auth_Module {
 		const BASE_URL = 'https://api.twitter.com';
 
-		private array $credential;
+		protected string $api_key;
 
-		private string $redirect_uri;
+		protected string $api_secret;
 
-		private string $oauth_token;
+		protected string $redirect_uri;
 
-		private string $oauth_token_secret;
+		protected string $oauth_token;
 
-		private string $oauth_nonce;
+		protected string $oauth_token_secret;
 
-		private string $oauth_timestamp;
+		protected string $oauth_nonce;
+
+		protected string $oauth_timestamp;
 
 		public function __construct() {
-			$this->credential         = nsl_settings()->get_credential( self::get_identifier() );
+			$credential = nsl_settings()->get_credential( self::get_identifier() );
+
+			$this->api_key            = $credential['key'] ?? '';
+			$this->api_secret         = $credential['secret'] ?? '';
 			$this->redirect_uri       = nsl_get_redirect_uri( self::get_identifier() );
 			$this->oauth_token        = '';
 			$this->oauth_token_secret = '';
@@ -33,174 +38,151 @@ if ( ! class_exists( 'NSL_Auth_Twitter' ) ) {
 			$this->oauth_timestamp    = '';
 		}
 
-		public function authorize() {
+		/**
+		 * @return array
+		 *
+		 * @throws Exception
+		 */
+		public function authorize(): array {
 			if ( ! isset( $_GET['oauth_token'] ) ) {
-				$url = add_query_arg(
-					'oauth_callback',
-					rawurlencode( $this->get_redirect_uri() ),
-					self::BASE_URL . '/oauth/request_token'
-				);
-
-				$response = $this->send_request( $url, 'POST' );
-				if ( is_string( $response ) ) {
-					parse_str( $response, $obj );
-					if (
-						'true' === ( $obj['oauth_callback_confirmed'] ?? 'false' ) &&
-						isset( $obj['oauth_token'], $obj['oauth_token_secret'] )
-					) {
-						$this->set_oauth_token( $obj['oauth_token'], $obj['oauth_token_secret'] );
-					}
-				}
-
-				$redirect_url = add_query_arg(
-					'oauth_token',
-					rawurlencode( $this->get_oauth_token() ),
-					self::BASE_URL . '/oauth/authorize'
-				);
-
-				wp_redirect( $redirect_url );
+				wp_redirect( $this->flow_1_authorize() );
+				exit;
 			} else {
-				$response = $this->send_request(
-					self::BASE_URL . '/oauth/access_token',
-					'POST',
-					[
-						'oauth_consumer_key' => $this->get_api_key(),
-						'oauth_token'        => $_GET['oauth_token'],
-						'oauth_verifier'     => $_GET['oauth_verifier']
-					]
-				);
-
-				if ( is_string( $response ) ) {
-					parse_str( $response, $obj );
-					if ( isset( $obj['oauth_token'], $obj['oauth_token_secret'] ) ) {
-						$this->set_oauth_token( $obj['oauth_token'], $obj['oauth_token_secret'] );
-						$user_id     = $obj['user_id'];
-						$screen_name = $obj['screen_name'];
-
-						$response = $this->send_request(
-							self::BASE_URL . '/1.1/users/show.json',
-							'GET',
-							[
-								'user_id'     => $user_id,
-								'screen_name' => $screen_name,
-							]
-						);
-
-						var_dump( $response );
-					}
-				}
+				return $this->flow_2_get_token()->get_profile();
 			}
 		}
 
-		public function set_credential( string $api_key, string $api_secret ) {
-			$this->credential = [
-				'key'    => $api_key,
-				'secret' => $api_secret,
-			];
+		/**
+		 * @return void
+		 * @throws Exception
+		 */
+		public function revoke_token() {
+			$r = $this->request( $this->get_url_invalidate_token(), 'POST' );
+			if ( ! $this->verify( $r, 'access_token' ) ) {
+				throw new Exception( 'Invalid invalidate_token response.' );
+			}
 		}
 
-		public function get_api_key(): string {
-			return $this->credential['key'] ?? '';
+		/**
+		 * @throws Exception
+		 */
+		protected function flow_1_authorize(): string {
+			$r = $this->request( $this->get_url_request_token(), 'POST' );
+
+			if ( $this->verify( $r, 'oauth_callback_confirmed=true&oauth_token&oauth_token_secret' ) ) {
+				$this->oauth_token        = $r['oauth_token'];
+				$this->oauth_token_secret = $r['oauth_token_secret'];
+
+				return $this->get_url_authorize();
+			} else {
+				throw new Exception( 'Invalid request_token response.' );
+			}
 		}
 
-		public function get_api_secret() {
-			return $this->credential['secret'] ?? '';
+		/**
+		 * @throws Exception
+		 */
+		protected function flow_2_get_token(): self {
+			$r = $this->request(
+				$this->get_url_access_token(),
+				'POST',
+				[
+					'oauth_token'    => $_GET['oauth_token'] ?? '',
+					'oauth_verifier' => $_GET['oauth_verifier'] ?? '',
+				]
+			);
+
+			if ( $this->verify( $r, 'oauth_token&oauth_token_secret' ) ) {
+				$this->oauth_token        = $r['oauth_token'];
+				$this->oauth_token_secret = $r['oauth_token_secret'];
+
+				return $this;
+			} else {
+				throw new Exception( 'Invalid access_token response.' );
+			}
 		}
 
-		public function get_redirect_uri(): string {
-			return $this->redirect_uri;
+		/**
+		 * @return array
+		 * @throws Exception
+		 */
+		protected function get_profile(): array {
+			$r = $this->request( $this->get_url_verify_credentials() );
+
+			if ( $this->verify( $r, 'id&email' ) ) {
+				return $r;
+			} else {
+				throw new Exception( 'Invalid verify_credentials response.' );
+			}
 		}
 
-		public function set_redirect_url( string $uri ) {
-			$this->redirect_uri = $uri;
-		}
-
-		public function set_oauth_token( string $token, string $token_secret ) {
-			$this->oauth_token        = $token;
-			$this->oauth_token_secret = $token_secret;
-		}
-
-		public function get_oauth_token(): string {
-			return $this->oauth_token;
-		}
-
-		public function get_oauth_token_secret(): string {
-			return $this->oauth_token_secret;
-		}
-
-		public function get_oauth_nonce(): string {
+		protected function get_oauth_nonce(): string {
 			if ( ! $this->oauth_nonce ) {
-				$this->set_oauth_nonce( wp_generate_password( 32, true ) );
+				$this->oauth_nonce = wp_generate_password( 32, false );
 			}
 
 			return $this->oauth_nonce;
 		}
 
-		public function set_oauth_nonce( string $oauth_nonce ) {
-			$this->oauth_nonce = $oauth_nonce;
-		}
-
-		public function get_oauth_timestamp(): string {
+		protected function get_oauth_timestamp(): string {
 			if ( ! $this->oauth_timestamp ) {
-				$this->set_oauth_timestamp( strval( time() ) );
+				$this->oauth_timestamp = strval( time() );
 			}
 
 			return $this->oauth_timestamp;
 		}
 
-		public function set_oauth_timestamp( string $oauth_timestamp ) {
-			$this->oauth_timestamp = $oauth_timestamp;
-		}
-
-		public function send_request( string $url, string $method = 'GET', array $data = [] ) {
-			$r = null;
-
+		/**
+		 * @param string $url
+		 * @param string $method
+		 * @param array  $data
+		 *
+		 * @return array
+		 * @throws Exception
+		 */
+		protected function request( string $url, string $method = 'GET', array $data = [] ): array {
 			$method = strtoupper( $method );
+
+			$args = [
+				'method'     => $method,
+				'user-agent' => nsl_get_user_agent(),
+			];
 
 			if ( 'GET' === $method ) {
 				if ( ! empty( $data ) ) {
 					$url = add_query_arg( rawurlencode_deep( $data ), $url );
 				}
-				$r = wp_remote_get(
-					$url,
-					[
-						'headers' => [
-							'Authorization' => $this->build_authorization_header( $url, $method, $data ),
-						]
-					]
 
-				);
+				$args['headers'] = [
+					'Authorization' => $this->build_authorization_header( $url, $method, $data )
+				];
 			} elseif ( 'POST' === $method ) {
-				$r = wp_remote_post(
-					$url,
-					[
-						'headers' => [
-							'Authorization' => $this->build_authorization_header( $url, $method, $data ),
-							'Content-Type'  => 'application/x-www-form-urlencoded',
-						],
-						'body'    => $data,
-					]
-				);
+				$args['headers'] = [
+					'Authorization' => $this->build_authorization_header( $url, $method, $data ),
+					'Content-Type'  => 'application/x-www-form-urlencoded',
+				];
+
+				$args['body'] = $data;
 			} else {
-				wp_die( 'Wrong method' );
+				throw new Exception(
+				/* translators: HTTP method */
+					sprintf( __( 'Unsupported HTTP method: %s', 'nsl' ), $method )
+				);
 			}
+
+			$r = wp_safe_remote_request( $url, $args );
 
 			if ( is_wp_error( $r ) ) {
-				wp_die( $r );
+				throw new Exception( $r->get_error_message() );
 			}
 
-			$this->set_oauth_nonce( '' );
-			$this->set_oauth_timestamp( '' );
+			$this->oauth_nonce     = '';
+			$this->oauth_timestamp = '';
 
-			$status = wp_remote_retrieve_response_code( $r );
-			if ( 200 == $status ) {
-				return wp_remote_retrieve_body( $r );
-			}
-
-			wp_die( wp_remote_retrieve_body( $r ) );
+			return nsl_remote_parse_body( $r );
 		}
 
-		public function build_authorization_header( string $url, string $method, array $data = [] ): string {
+		protected function build_authorization_header( string $url, string $method, array $data = [] ): string {
 			$signature = $this->build_oauth_signature( $url, $method, $data );
 
 			$buffer = [
@@ -208,16 +190,16 @@ if ( ! class_exists( 'NSL_Auth_Twitter' ) ) {
 			];
 
 			$params = [
-				'oauth_callback'         => $this->get_redirect_uri(), // TODO: redirect uri 매번 나오지 않음.
-				'oauth_consumer_key'     => $this->get_api_key(),
+				'oauth_consumer_key'     => $this->api_key,
 				'oauth_nonce'            => $this->get_oauth_nonce(),
 				'oauth_signature'        => $signature,
 				'oauth_signature_method' => 'HMAC-SHA1',
 				'oauth_timestamp'        => $this->get_oauth_timestamp(),
+				'oauth_token'            => $this->oauth_token,
 				'oauth_version'          => '1.0',
 			];
 
-			foreach ( $params as $key => $value ) {
+			foreach ( array_filter( $params ) as $key => $value ) {
 				$key      = rawurlencode( $key );
 				$value    = rawurlencode( $value );
 				$buffer[] = "$key=\"$value\"";
@@ -226,7 +208,7 @@ if ( ! class_exists( 'NSL_Auth_Twitter' ) ) {
 			return implode( ', ', $buffer );
 		}
 
-		public function build_oauth_signature( string $url, string $method, array $data = [] ): string {
+		protected function build_oauth_signature( string $url, string $method, array $data = [] ): string {
 			$params = [];
 
 			$p = strpos( $url, '?' );
@@ -242,21 +224,20 @@ if ( ! class_exists( 'NSL_Auth_Twitter' ) ) {
 				parse_str( $query, $params );
 			}
 
-			$params = array_merge(
-				$params,
-				$data,
-				[
-					'oauth_consumer_key'     => $this->get_api_key(),
-					'oauth_nonce'            => $this->get_oauth_nonce(),
-					'oauth_timestamp'        => $this->get_oauth_timestamp(),
-					'oauth_signature_method' => 'HMAC-SHA1',
-					'oauth_version'          => '1.0',
-				]
+			$params = array_filter(
+				array_merge(
+					$params,
+					$data,
+					[
+						'oauth_consumer_key'     => $this->api_key,
+						'oauth_nonce'            => $this->get_oauth_nonce(),
+						'oauth_timestamp'        => $this->get_oauth_timestamp(),
+						'oauth_token'            => $this->oauth_token,
+						'oauth_signature_method' => 'HMAC-SHA1',
+						'oauth_version'          => '1.0',
+					]
+				)
 			);
-
-			if ( $this->oauth_token ) {
-				$params['oauth_token'] = $this->oauth_token;
-			}
 
 			ksort( $params );
 
@@ -271,9 +252,50 @@ if ( ! class_exists( 'NSL_Auth_Twitter' ) ) {
 				)
 			);
 
-			$sign_key = rawurlencode( $this->get_api_secret() ) . '&' . rawurlencode( $this->get_oauth_token_secret() );
+			$sign_key = rawurlencode( $this->api_secret ) . '&' . rawurlencode( $this->oauth_token_secret );
 
 			return base64_encode( hash_hmac( 'sha1', $base_string, $sign_key, true ) );
+		}
+
+		protected function verify( array $response, string $condition ): bool {
+			return nsl_verify_response( $response, $condition );
+		}
+
+		protected function get_url_request_token(): string {
+			return add_query_arg(
+				'oauth_callback',
+				rawurlencode( $this->redirect_uri ),
+				static::BASE_URL . '/oauth/request_token'
+			);
+		}
+
+		protected function get_url_authorize(): string {
+			return add_query_arg(
+				'oauth_token',
+				rawurlencode( $this->oauth_token ),
+				self::BASE_URL . '/oauth/authorize'
+			);
+		}
+
+		protected function get_url_access_token(): string {
+			return static::BASE_URL . '/oauth/access_token';
+		}
+
+		protected function get_url_verify_credentials(): string {
+			return add_query_arg(
+				rawurlencode_deep(
+					[
+						'include_entities' => 'false',
+						'skip_status'      => 'true',
+						'include_email'    => 'true',
+					]
+				),
+				self::BASE_URL . '/1.1/account/verify_credentials.json'
+			);
+		}
+
+		protected function get_url_invalidate_token(): string {
+			return self::BASE_URL . '/1.1/oauth/invalidate_token';
 		}
 
 		public static function get_identifier(): string {
