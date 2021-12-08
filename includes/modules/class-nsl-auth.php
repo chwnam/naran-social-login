@@ -17,6 +17,7 @@ if ( ! class_exists( 'NSL_Auth' ) ) {
 
 		public function handle_redirect() {
 			$auth = $this->get_auth_backend( get_query_var( 'nsl' ) );
+
 			if ( ! $auth ) {
 				wp_die( 'Unsupported service ID: ' . get_query_var( 'nsl' ) );
 			}

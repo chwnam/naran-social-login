@@ -51,7 +51,7 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 			);
 
 			add_settings_field(
-				'nsl-services-active',
+				'nsl-services-enable-disable',
 				__( 'Enable/Disable', 'nsl' ),
 				[ $this, 'render_field_enable_disable' ],
 				self::PAGE_SLUG,
@@ -59,9 +59,9 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 			);
 
 			add_settings_field(
-				'nsl-services-available',
-				__( 'Available Services', 'nsl' ),
-				[ $this, 'render_field_available_services' ],
+				'nsl-services-active',
+				__( 'Active Services', 'nsl' ),
+				[ $this, 'render_field_active_services' ],
 				self::PAGE_SLUG,
 				$section_services
 			);
@@ -105,7 +105,7 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 					'name'    => nsl_option()->settings->get_option_name() . '[enabled]',
 					'value'   => 'yes',
 					'type'    => 'checkbox',
-					'checked' => nsl()->settings->is_enabled(),
+					'checked' => nsl_settings()->is_enabled(),
 				]
 			);
 			NSL_HTML::tag_open( 'label', [ 'for' => 'nsl-field-enabled' ] );
@@ -114,10 +114,22 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 		}
 
 		/**
-		 * Render 'Available Services' field.
+		 * Render 'Active Services' field.
 		 *
 		 */
-		public function render_field_available_services() {
+		public function render_field_active_services() {
+			$services = nsl_get_available_services();
+
+			asort( $services );
+
+			$this->render(
+				'admins/settings-field-active-service',
+				[
+					'services'    => $services,
+					'option_name' => nsl_option()->settings->get_option_name(),
+					'values'      => nsl_settings()->get_active_services(),
+				]
+			);
 		}
 
 		/**
@@ -154,7 +166,7 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 				'admins/settings-field-credentials',
 				[
 					'option_name'  => nsl_option()->settings->get_option_name(),
-					'option_value' => nsl()->settings->get_credentials(),
+					'option_value' => nsl_settings()->get_credentials(),
 					'items'        => $items,
 				]
 			);

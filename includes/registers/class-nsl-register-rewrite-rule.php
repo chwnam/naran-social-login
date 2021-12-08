@@ -72,7 +72,7 @@ if ( ! class_exists( 'NSL_Register_Rewrite_Rule' ) ) {
 					);
 					wp_die( $error );
 				}
-				$callback();
+				call_user_func( $callback );
 				exit;
 			}
 		}

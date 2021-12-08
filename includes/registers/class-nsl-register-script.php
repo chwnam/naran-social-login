@@ -14,7 +14,7 @@ if ( ! class_exists( 'NSL_Register_Script' ) ) {
 			yield new NSL_Reg_Script(
 				'nsl-settings-page',
 				$this->src_helper( 'admins/settings-page.js' ),
-				[ 'jquery', 'jquery-ui-tabs' ]
+				[ 'jquery', 'jquery-ui-sortable', 'jquery-ui-tabs' ]
 			);
 		}
 	}

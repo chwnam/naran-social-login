@@ -55,4 +55,32 @@ class Test_Twitter extends WP_UnitTestCase {
 
 		$this->assertEquals( 'hCtSmYh+iHYCEqBWrE7C7hYmtUk=', $signature_base64 );
 	}
+
+	public function test_build_oauth_signature() {
+		$twitter = new NSL_Auth_Twitter();
+
+		$twitter->set_credential(
+			'xvz1evFS4wEEPTGEFPHBog',
+			'kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw'
+		);
+
+		$twitter->set_oauth_token(
+			'370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb',
+			'LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE'
+		);
+
+		$twitter->set_oauth_nonce( 'kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg' );
+
+		$twitter->set_oauth_timestamp( '1318622958' );
+
+		$signature = $twitter->build_oauth_signature(
+			'https://api.twitter.com/1.1/statuses/update.json?include_entities=true',
+			'post',
+			[
+				'status' => 'Hello Ladies + Gentlemen, a signed OAuth request!',
+			]
+		);
+
+		$this->assertEquals( 'hCtSmYh+iHYCEqBWrE7C7hYmtUk=', $signature );
+	}
 }
