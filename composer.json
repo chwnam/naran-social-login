@@ -41,7 +41,8 @@
   },
   "require": {
     "php": "^7.4",
-    "ext-json": "*"
+    "ext-json": "*",
+    "erusev/parsedown": "^1.7.4"
   },
   "version": "0.1.0",
   "require-dev": {

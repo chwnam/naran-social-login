@@ -22,21 +22,56 @@ if ( ! class_exists( 'NSL_Admin_Settings_Page' ) ) {
 		public function admin_enqueue_scripts( string $hook ) {
 			if ( 'settings_page_nsl' === $hook ) {
 				$this->enqueue_style( 'nsl-settings-page' );
+				if ( isset( $_GET['doc'] ) ) {
+					$this->enqueue_style( 'nsl-github-markdown' );
+				}
 			}
 		}
 
 		public function render_page() {
-			$this
-				->prepare_setings()
-				->enqueue_script( 'nsl-settings-page' )
-				->render(
-					'admins/settings-page',
-					[
-						'option_group' => 'nsl_settings',
-						'page'         => self::PAGE_SLUG,
-					]
-				)
-			;
+			if ( isset( $_GET['doc'] ) ) {
+				$this->render_document( $_GET['doc'] );
+			} else {
+				$this
+					->prepare_setings()
+					->enqueue_script( 'nsl-settings-page' )
+					->render(
+						'admins/settings-page',
+						[
+							'option_group' => 'nsl_settings',
+							'page'         => self::PAGE_SLUG,
+						]
+					)
+				;
+			}
+		}
+
+		protected function render_document( string $doc ) {
+			$locale = get_user_locale();
+			if ( 'ko_KR' !== $locale ) {
+				echo '<p>Sorry, currently Korean documents are available.</p>';
+				return;
+			}
+
+			$doc      = sanitize_key( $doc );
+			$doc_path = dirname( nsl()->get_main_file() ) . "/docs/$doc.md";
+
+			if ( file_exists( $doc_path ) && is_readable( $doc_path ) ) {
+				$pd = new Parsedown();
+
+				// Search and replace relative image urls.
+				$url  = plugin_dir_url( nsl()->get_main_file() ) . 'docs/img/';
+				$text = file_get_contents( $doc_path );
+				$text = str_replace( '![](./img/', '![](' . $url, $text );
+
+				$rendered = $pd->text( $text );
+
+				if ( $rendered ) {
+					echo '<div class="wrap"><article class="markdown-body">';
+					echo $rendered;
+					echo '</article></div>';
+				}
+			}
 		}
 
 		protected function prepare_setings(): self {

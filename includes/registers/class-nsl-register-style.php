@@ -23,6 +23,10 @@ if ( ! class_exists( 'NSL_Register_Style' ) ) {
 					$this->src_helper( 'admins/settings-page.css' ),
 					[ 'nsl-jquery-ui' ]
 				);
+				yield new NSL_Reg_Style(
+					'nsl-github-markdown',
+					$this->src_helper('admins/github-markdown.css', false )
+				);
 			} else {
 				yield;
 			}

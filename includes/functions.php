@@ -136,6 +136,29 @@ if ( ! function_exists( 'nsl_get_redirect_uri' ) ) {
 }
 
 
+if ( ! function_exists( 'nsl_get_doc_url' ) ) {
+	/**
+	 * Get redirect URI by identifier.
+	 *
+	 * @param string  $id Identifier.
+	 * @param ?string $locale
+	 *
+	 * @return string
+	 */
+	function nsl_get_doc_url( string $id, ?string $locale = null ): string {
+		if ( is_null( $locale ) ) {
+			$locale = get_user_locale();
+		}
+
+		if ( 'ko_KR' === $locale ) {
+			return admin_url( "options-general.php?page=nsl&doc=" . sanitize_key( $id ) );
+		}
+
+		return '';
+	}
+}
+
+
 if ( ! function_exists( 'nsl_get_user_agent' ) ) {
 	function nsl_get_user_agent(): string {
 		$wp_version  = get_bloginfo( 'version' );
@@ -145,6 +168,7 @@ if ( ! function_exists( 'nsl_get_user_agent' ) ) {
 		return apply_filters( 'nsl_get_user_agent', "WordPress/$wp_version, Naran Social Login/$nsl_version; $url" );
 	}
 }
+
 
 if ( ! function_exists( 'nsl_remote_request' ) ) {
 	/**
@@ -183,6 +207,7 @@ if ( ! function_exists( 'nsl_remote_request' ) ) {
 		return nsl_remote_parse_body( $r );
 	}
 }
+
 
 if ( ! function_exists( 'nsl_remote_parse_body' ) ) {
 	/**

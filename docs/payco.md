@@ -5,10 +5,12 @@
 
 ## 앱 대시보드
 ![](./img/payco-01.png)
+
 로그인한 후 메뉴의 '애플리케이션 관리'를 찾아 이동합니다.
 
 ## 새 앱 생성
 ![](./img/payco-02.png)
+
 '애플리케이션 등록' 버튼을 눌러 새 앱을 생성합니다.
 
 애플리케이션 정보를 입력합니다.
@@ -53,5 +55,3 @@ Client ID, Client Secret 항목을 확인할 수 있을 것입니다.
 '보기' 버튼을 클릭하여 Client Secret을 노출 시킨 후, Client ID, Client Secret을 복사하여
 관리자 > 설정 > 나란 소셜 로그인 > PAYCO > Client ID, Client Secret 에 각각 붙여넣기 하고
 저장합니다.
-
-## 추가 사항

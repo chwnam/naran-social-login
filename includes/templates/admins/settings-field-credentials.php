@@ -88,6 +88,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 							esc_html( $item['dev_title'] )
 						);
 						echo wp_kses( $html, [ 'a' => [ 'href' => true, 'target' => true ] ] );
+
+                        $url = nsl_get_doc_url( $id );
+						if ( $url ) {
+							$html = sprintf(
+								__( 'Refer to <a href="%1$s" target="nsl-doc">documentation page</a> for setting up the authorization.', 'nsl' ),
+								esc_url( $url )
+							);
+							echo '<br>';
+							echo wp_kses( $html, [ 'a' => [ 'href' => true, 'target' => true ] ] );
+						}
 						?>
                     </p>
                 </fieldset>
