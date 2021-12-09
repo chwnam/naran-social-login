@@ -11,10 +11,11 @@ if ( ! class_exists( 'NSL_Main' ) ) {
 	/**
 	 * Class NSL_Main
 	 *
-	 * @property-read NSL_Admins    $admins
-	 * @property-read NSL_Registers $registers
-	 * @property-read NSL_Settings  $settings
-	 * @property-read NSL_Testbed   $testbed
+	 * @property-read NSL_Admins            $admins
+	 * @property-read NSL_Registers         $registers
+	 * @property-read NSL_Settings          $settings
+	 * @property-read NSL_Transient_Session $session
+	 * @property-read NSL_Testbed           $testbed
 	 */
 	final class NSL_Main extends NSL_Main_Base {
 		/**
@@ -29,6 +30,7 @@ if ( ! class_exists( 'NSL_Main' ) ) {
 				'admins'    => NSL_Admins::class,
 				'auth'      => function () { return new NSL_Auth(); },
 				'registers' => NSL_Registers::class,
+				'session'   => function () { return new NSL_Transient_Session(); },
 				'settings'  => function () { return new NSL_Settings(); },
 				'testbed'   => NSL_Testbed::class,
 			];

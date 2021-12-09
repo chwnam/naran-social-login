@@ -39,11 +39,11 @@ if ( ! class_exists( 'NSL_Auth_Twitter' ) ) {
 		}
 
 		/**
-		 * @return array
+		 * @return NSL_Profile
 		 *
 		 * @throws Exception
 		 */
-		public function authorize(): array {
+		public function authorize(): NSL_Profile {
 			if ( ! isset( $_GET['oauth_token'] ) ) {
 				wp_redirect( $this->flow_1_authorize() );
 				exit;
@@ -103,17 +103,105 @@ if ( ! class_exists( 'NSL_Auth_Twitter' ) ) {
 		}
 
 		/**
-		 * @return array
+		 * @return NSL_Profile
 		 * @throws Exception
 		 */
-		protected function get_profile(): array {
-			$r = $this->request( $this->get_url_verify_credentials() );
+		protected function get_profile(): NSL_Profile {
+			$response = $this->request( $this->get_url_verify_credentials() );
 
-			if ( $this->verify( $r, 'id&email' ) ) {
-				return $r;
-			} else {
+			if ( ! $this->verify( $response, 'id&email' ) ) {
 				throw new Exception( 'Invalid verify_credentials response.' );
 			}
+
+			/**
+			 * @var array $response
+			 *
+			 * @sample
+			 * Array
+			 * (
+			 *   [id] => 1234567890
+			 *   [id_str] => 1234567890
+			 *   [name] => John Doe
+			 *   [screen_name] => ep6tri
+			 *   [location] => Seoul, Korea
+			 *   [description] =>
+			 *   [url] => https://john.co.kr
+			 *   [entities] => Array
+			 *   (
+			 *     [url] => Array
+			 *     (
+			 *       [urls] => Array
+			 *       (
+			 *         [0] => Array
+			 *         (
+			 *           [url] => https://t.co/abcdefg
+			 *           [expanded_url] => https://john.co.kr
+			 *           [display_url] => john.co.kr
+			 *           [indices] => Array
+			 *           (
+			 *             [0] => 0
+			 *             [1] => 23
+			 *           )
+			 *         )
+			 *       )
+			 *     )
+			 *     [description] => Array
+			 *     (
+			 *       [urls] => Array
+			 *       (
+			 *       )
+			 *     )
+			 *   )
+			 *   [protected] =>
+			 *   [followers_count] => 7
+			 *   [friends_count] => 29
+			 *   [listed_count] => 0
+			 *   [created_at] => Fri May 10 02:55:31 +0000 2013
+			 *   [favourites_count] => 10
+			 *   [utc_offset] =>
+			 *   [time_zone] =>
+			 *   [geo_enabled] =>
+			 *   [verified] =>
+			 *   [statuses_count] => 100
+			 *   [lang] =>
+			 *   [contributors_enabled] =>
+			 *   [is_translator] =>
+			 *   [is_translation_enabled] => 1
+			 *   [profile_background_color] => 000000
+			 *   [profile_background_image_url] => http://abs.twimg.com/images/themes/theme1/bg.png
+			 *   [profile_background_image_url_https] => https://abs.twimg.com/images/themes/theme1/bg.png
+			 *   [profile_background_tile] =>
+			 *   [profile_image_url] => http://pbs.twimg.com/profile_images/image-url
+			 *   [profile_image_url_https] => https://pbs.twimg.com/profile_images/image-url
+			 *   [profile_link_color] => FA743E
+			 *   [profile_sidebar_border_color] => 000000
+			 *   [profile_sidebar_fill_color] => 000000
+			 *   [profile_text_color] => 000000
+			 *   [profile_use_background_image] =>
+			 *   [has_extended_profile] => 1
+			 *   [default_profile] =>
+			 *   [default_profile_image] =>
+			 *   [following] =>
+			 *   [follow_request_sent] =>
+			 *   [notifications] =>
+			 *   [translator_type] => none
+			 *   [withheld_in_countries] => Array
+			 *   (
+			 *   )
+			 *   [suspended] =>
+			 *   [needs_phone_verification] =>
+			 *   [email] => john@email.com
+			 * )
+			 */
+			$profile = new NSL_Profile();
+
+			$profile->service = self::get_identifier();
+			$profile->id      = $response['id'] ?? '';
+			$profile->email   = $response['email'] ?? '';
+			$profile->name    = $response['name'] ?? '';
+			$profile->picture = $response['profile_image_url_https'] ?? '';
+
+			return apply_filters( 'nsl_get_profile_twitter', $profile, $response );
 		}
 
 		protected function get_oauth_nonce(): string {

@@ -23,12 +23,14 @@ if ( ! class_exists( 'NSL_Auth' ) ) {
 
 			try {
 				$profile = $auth->authorize();
-				if ( $profile ) {
-					echo '<h1>' . $auth::get_identifier() . '</h1>';
-					echo '<div><pre>' . print_r( $profile, 1 ) . '</pre></div>';
-				}
+				echo '<h1>' . $auth::get_identifier() . '</h1>';
+				echo '<div><pre>' . print_r( $profile, 1 ) . '</pre></div>';
+
 				$auth->revoke_token();
 				echo '<div>Successfully token revoked.</div>';
+
+				nsl_session()->destroy();
+				echo '<div>Session destroyed.</div>';
 			} catch ( Exception $e ) {
 				$code = $e->getCode();
 				if ( $code ) {

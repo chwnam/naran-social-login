@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! interface_exists( 'NSL_Auth_Module' ) ) {
 	interface NSL_Auth_Module extends NSL_Module {
-		public function authorize();
+		public function authorize(): NSL_Profile;
 
 		public function revoke_token();
 

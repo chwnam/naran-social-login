@@ -19,6 +19,20 @@ if ( ! function_exists( 'nsl_settings' ) ) {
 }
 
 
+if ( ! function_exists( 'nsl_session' ) ) {
+	/**
+	 * Return setitngs module.
+	 *
+	 * Alias of nsl()->session.
+	 *
+	 * @return NSL_Transient_Session
+	 */
+	function nsl_session(): NSL_Transient_Session {
+		return nsl()->session;
+	}
+}
+
+
 if ( ! function_exists( 'nsl_get_available_services' ) ) {
 	/**
 	 * Get list of social login services.
