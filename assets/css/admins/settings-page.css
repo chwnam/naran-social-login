@@ -43,3 +43,30 @@
         max-width: 99%;
     }
 }
+
+#nsl-icon-set > ul > li:nth-child(2n) {
+    background-color: #e3e3e3;
+}
+
+.nsl-icons-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.nsl-icons-row > li {
+    padding: 10px 15px;
+}
+
+.nsl-icon-radio-col {
+    padding: 10px 15px;
+}
+
+.nsl-icon-image-wrap {
+    text-align: center;
+}
+
+.nsl-icon-set {
+    width: 24px;
+    height: 24px;
+}

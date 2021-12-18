@@ -136,6 +136,31 @@ if ( ! function_exists( 'nsl_get_redirect_uri' ) ) {
 }
 
 
+if ( ! function_exists( 'nsl_get_icon_sets' ) ) {
+	/**
+	 * Get list of icon sets.
+	 *
+	 * @return array
+	 */
+	function nsl_get_icon_sets(): array {
+		$url = plugin_dir_url( nsl()->get_main_file() ) . 'assets/img/';
+
+		$icon_sets = [
+			'default' => [
+				'facebook' => $url . 'facebook.png',
+				'google'   => $url . 'google.png',
+				'kakao'    => $url . 'kakao.png',
+				'naver'    => $url . 'naver.png',
+				'payco'    => $url . 'payco.png',
+				'twitter'  => $url . 'twitter.png',
+			],
+		];
+
+		return apply_filters( 'nsl_get_icon_sets', $icon_sets );
+	}
+}
+
+
 if ( ! function_exists( 'nsl_get_doc_url' ) ) {
 	/**
 	 * Get redirect URI by identifier.
