@@ -48,7 +48,7 @@ if ( ! class_exists( 'NSL_Register_Rewrite_Rule' ) ) {
 				'^nsl/([^/]+)/?$',
 				'index.php?nsl=$matches[1]',
 				'top',
-				'auth@handle_redirect',
+				'auth_handler@handle_redirect',
 				'nsl'
 			);
 		}

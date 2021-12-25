@@ -16,7 +16,7 @@ if ( ! class_exists( 'NSL_Settings' ) ) {
 
 		public function __construct() {
 			if ( did_action( 'init' ) ) {
-				$this->load_option();
+				$this->settings = nsl_option()->settings->get_value();
 			} else {
 				wp_die( __CLASS__ . ' is initialized incorrectly.' );
 			}
@@ -24,10 +24,6 @@ if ( ! class_exists( 'NSL_Settings' ) ) {
 
 		public function get_name(): string {
 			return nsl_option()->settings->get_option_name();
-		}
-
-		public function load_option() {
-			$this->settings = nsl_option()->settings->get_value();
 		}
 
 		public function is_enabled(): bool {

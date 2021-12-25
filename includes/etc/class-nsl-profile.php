@@ -66,5 +66,29 @@ if ( ! class_exists( 'NSL_Profile' ) ) {
 		 * @var string
 		 */
 		public string $locale = '';
+
+		/**
+		 * Extra attributes
+		 *
+		 * @var array
+		 */
+		public array $extra_attrs = [];
+
+		public function to_array(): array {
+			return get_object_vars( $this );
+		}
+
+		public static function from_array( array $array ): NSL_Profile {
+			$instance = new static();
+			$attrs    = array_keys( get_object_vars( $instance ) );
+
+			foreach ( $attrs as $attr ) {
+				if ( isset( $array[ $attr ] ) ) {
+					$instance->$attr = $array[ $attr ];
+				}
+			}
+
+			return $instance;
+		}
 	}
 }

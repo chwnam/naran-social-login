@@ -1,0 +1,28 @@
+#nsl-default-login-support {
+    list-style-type: none;
+    display: flex;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+#nsl-default-login-support > li {
+    width: 24px;
+    height: 24px;
+    margin: 0 5px;
+}
+
+#nsl-default-login-support > li:first-child {
+    margin-left: 0;
+}
+
+#nsl-default-login-support a {
+    display: block;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+}
+
+#nsl-default-login-support .login-icon-image {
+    width: 24px;
+    height: 24px;
+}

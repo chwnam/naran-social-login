@@ -20,15 +20,18 @@ if ( ! class_exists( 'NSL_Register_Style' ) ) {
 				);
 				yield new NSL_Reg_Style(
 					'nsl-settings-page',
-					$this->src_helper( 'admins/settings-page.css' ),
+					$this->src_helper( 'admins/settings-page.css', false ),
 					[ 'nsl-jquery-ui' ]
 				);
 				yield new NSL_Reg_Style(
 					'nsl-github-markdown',
-					$this->src_helper('admins/github-markdown.css', false )
+					$this->src_helper( 'admins/github-markdown.css', false )
 				);
 			} else {
-				yield;
+				yield new NSL_Reg_Style(
+					'nsl-default-login-support',
+					$this->src_helper( 'default-login-support.css', false )
+				);
 			}
 		}
 	}

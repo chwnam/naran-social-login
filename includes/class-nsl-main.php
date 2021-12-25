@@ -12,11 +12,12 @@ if ( ! class_exists( 'NSL_Main' ) ) {
 	 * Class NSL_Main
 	 *
 	 * @property-read NSL_Admins                $admins
+	 * @property-read NSL_Auth_Handler          $auth_handler
 	 * @property-read NSL_Default_Login_Support $dls,
 	 * @property-read NSL_Registers             $registers
 	 * @property-read NSL_Settings              $settings
 	 * @property-read NSL_Transient_Session     $session
-	 * @property-read NSL_Testbed               $testbed
+	 * @property-read NSL_User_Handler          $user_handler
 	 */
 	final class NSL_Main extends NSL_Main_Base {
 		/**
@@ -28,13 +29,13 @@ if ( ! class_exists( 'NSL_Main' ) ) {
 		 */
 		protected function get_modules(): array {
 			return [
-				'admins'    => NSL_Admins::class,
-				'auth'      => function () { return new NSL_Auth(); },
-				'dls'       => NSL_Default_Login_Support::class,
-				'registers' => NSL_Registers::class,
-				'session'   => function () { return new NSL_Transient_Session(); },
-				'settings'  => function () { return new NSL_Settings(); },
-				'testbed'   => NSL_Testbed::class,
+				'admins'       => NSL_Admins::class,
+				'auth_handler' => function () { return new NSL_Auth_Handler(); },
+				'dls'          => NSL_Default_Login_Support::class,
+				'registers'    => NSL_Registers::class,
+				'session'      => function () { return new NSL_Transient_Session(); },
+				'settings'     => function () { return new NSL_Settings(); },
+				'user_handler' => function () { return new NSL_User_Handler(); },
 			];
 		}
 

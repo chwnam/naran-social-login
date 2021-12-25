@@ -10,6 +10,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'NSL_Auth_Google' ) ) {
 	class NSL_Auth_Google implements NSL_Auth_Module {
+		protected NSL_Remote_Request $r;
+
 		protected string $api_key;
 
 		protected string $api_secret;
@@ -23,6 +25,7 @@ if ( ! class_exists( 'NSL_Auth_Google' ) ) {
 		public function __construct() {
 			$credential = nsl_settings()->get_credential( static::get_identifier() );
 
+			$this->r            = new NSL_Remote_Request();
 			$this->api_key      = $credential['key'] ?? '';
 			$this->api_secret   = $credential['secret'] ?? '';
 			$this->redirect_uri = nsl_get_redirect_uri( static::get_identifier() );
@@ -154,11 +157,11 @@ if ( ! class_exists( 'NSL_Auth_Google' ) ) {
 		 * @throws Exception
 		 */
 		protected function request( string $url, string $method = 'GET', array $data = [], array $args = [] ): array {
-			return nsl_remote_request( $url, $method, $data, $args );
+			return $this->r->request( $url, $method, $data, $args );
 		}
 
 		protected function verify( array $response, string $condition ): bool {
-			return nsl_verify_response( $response, $condition );
+			return $this->r->verify_response( $response, $condition );
 		}
 
 		protected function generate_state( array $input, $timestamp = null ): string {
@@ -172,8 +175,7 @@ if ( ! class_exists( 'NSL_Auth_Google' ) ) {
 
 			$base_string = build_query( rawurlencode_deep( $input ) );
 			$sign_key    = $this->api_secret . '&' . AUTH_KEY;
-
-			$hash = hash_hmac( 'sha1', $base_string, $sign_key );
+			$hash        = hash_hmac( 'sha1', $base_string, $sign_key );
 
 			return build_query(
 				rawurlencode_deep(
